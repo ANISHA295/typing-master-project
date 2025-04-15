@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Typing Master Pro Extended</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 95%;
+      max-width: 900px;
+      animation: fadeIn 1s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    h1 {
+      margin-bottom: 10px;
+      color: #333;
+      font-weight: 600;
+      font-size: 2rem;
+    }
+    #word {
+      font-size: 24px;
+      margin: 20px 0;
+      color: #2575fc;
+      font-weight: bold;
+      min-height: 60px;
+    }
+    #word span.correct { color: green; }
+    #word span.incorrect { color: red; }
+    input {
+      padding: 15px;
+      width: 95%;
+      border: 2px solid #2575fc;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 15px;
+      font-weight: 600;
+      font-size: 14px;
+      color: #333;
+    }
+    .options {
+      margin-bottom: 15px;
+    }
+    button {
+      padding: 12px 25px;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+    }
+    #progressBar {
+      width: 100%;
+      height: 10px;
+      background: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+      margin-bottom: 15px;
+    }
+    #progressBarFill {
+      height: 100%;
+      width: 100%;
+      background: #6a11cb;
+      transition: width 0.2s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Typing Master  🚀</h1>
+    <div class="options">
+      Mode:
+      <select id="mode">
+        <option value="word">Word</option>
+        <option value="line" selected>Line</option>
+      </select>
+      Difficulty:
+      <select id="difficulty">
+        <option value="easy">Easy</option>
+        <option value="medium" selected>Medium</option>
+        <option value="hard">Hard</option>
+      </select>
+    </div>
+    <div id="word">Loading...</div>
+    <input type="text" id="textInput" placeholder="Start typing..." autofocus />
+    <div id="progressBar"><div id="progressBarFill"></div></div>
+    <div class="stats">
+      <div>Time: <span id="time">30</span>s</div>
+      <div>Score: <span id="score">0</span></div>
+      <div>WPM: <span id="wpm">0</span></div>
+      <div>Accuracy: <span id="accuracy">100</span>%</div>
+    </div>
+    <button onclick="startGame()">Restart Game</button>
+  </div>
+
+  <audio id="correctSound" src="https://assets.mixkit.co/sfx/preview/mixkit-positive-interface-beep-221.mp3"></audio>
+
+  <script>
+    const wordDisplay = document.getElementById('word');
+    const textInput = document.getElementById('textInput');
+    const scoreDisplay = document.getElementById('score');
+    const timeDisplay = document.getElementById('time');
+    const wpmDisplay = document.getElementById('wpm');
+    const accuracyDisplay = document.getElementById('accuracy');
+    const modeSelect = document.getElementById('mode');
+    const difficultySelect = document.getElementById('difficulty');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const correctSound = document.getElementById('correctSound');
+
+    const words = ['function', 'variable', 'object', 'program', 'syntax', 'array', 'compile', 'debug', 'execute', 'interface', 'network', 'hardware', 'software', 'cloud', 'server', 'database', 'memory', 'storage', 'cache', 'binary'];
+    const lines = [
+      'Consistent practice improves typing skills',
+      'Cloud computing is the future of technology',
+      'Debugging is twice as hard as writing code',
+      'The database stores persistent data',
+      'Learn algorithms to solve problems efficiently',
+      'Network security is critical for data protection',
+      'Software development requires patience and focus',
+      'Interfaces define how components interact',
+      'Always comment your code for better readability'
+    ];
+
+    let currentText = '';
+    let score = 0;
+    let time = 30;
+    let timer;
+    let typedChars = 0;
+    let correctChars = 0;
+
+    function getRandomText() {
+      const mode = modeSelect.value;
+      const difficulty = difficultySelect.value;
+      let list = mode === 'word' ? words : lines;
+      if (difficulty === 'easy') list = list.slice(0, 5);
+      else if (difficulty === 'medium') list = list.slice(0, 10);
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    function displayNewText() {
+      currentText = getRandomText();
+      wordDisplay.innerHTML = currentText.split('').map(char => `<span>${char}</span>`).join('');
+      textInput.value = '';
+    }
+
+    function startGame() {
+      clearInterval(timer);
+      time = 30;
+      score = 0;
+      typedChars = 0;
+      correctChars = 0;
+      timeDisplay.textContent = time;
+      scoreDisplay.textContent = score;
+      wpmDisplay.textContent = 0;
+      accuracyDisplay.textContent = 100;
+      progressBarFill.style.width = '100%';
+      displayNewText();
+      textInput.focus();
+      timer = setInterval(updateTime, 1000);
+    }
+
+    function updateTime() {
+      time--;
+      timeDisplay.textContent = time;
+      progressBarFill.style.width = `${(time / 30) * 100}%`;
+      if (time === 0) {
+        clearInterval(timer);
+        alert(`Time's up! Your score: ${score}`);
+      }
+    }
+
+    textInput.addEventListener('input', () => {
+      const input = textInput.value;
+      const spans = wordDisplay.querySelectorAll('span');
+      typedChars++;
+
+      input.split('').forEach((char, idx) => {
+        if (char === currentText[idx]) {
+          spans[idx].classList.add('correct');
+          spans[idx].classList.remove('incorrect');
+        } else {
+          spans[idx]?.classList.add('incorrect');
+          spans[idx]?.classList.remove('correct');
+        }
+      });
+
+      correctChars = input.split('').filter((char, idx) => char === currentText[idx]).length;
+
+      if (input === currentText) {
+        score++;
+        scoreDisplay.textContent = score;
+        correctSound.play();
+        displayNewText();
+      }
+
+      const accuracy = typedChars > 0 ? Math.round((correctChars / typedChars) * 100) : 100;
+      const wpm = Math.round((score * (60 / (30 - time || 1))) * (modeSelect.value === 'line' ? 4 : 1));
+      accuracyDisplay.textContent = accuracy;
+      wpmDisplay.textContent = wpm;
+    });
+
+    startGame();
+  </script>
+</body>
+</html>
